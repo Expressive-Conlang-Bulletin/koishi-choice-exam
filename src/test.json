@@ -1,0 +1,43 @@
+[
+	{
+		"type": "single-match",
+		"answer": "B",
+		"answer-range": ["A", "B", "C"],
+		"score": 10
+	},
+	{
+		"type": "single-match-any",
+		"answer": {
+			"A": 10,
+			"B": 5,
+			"C": 0
+		}
+	},
+	{
+		"type": "single-match-any",
+		"answer": {
+			"A": 10,
+			"B": -10
+		}
+	},
+	{
+		"type": "multiple-match",
+		"answer": ["A", "B"],
+		"answer-range": ["A", "B", "C"],
+		"score": 10
+	},
+	{
+		"type": "multiple-match-any",
+		"answer": [
+			{
+				"input": ["A", "B"],
+				"score": 10
+			},
+			{
+				"input": ["A", "C"],
+				"score": 10
+			}
+		],
+		"answer-range": ["A", "B", "C"]
+	}
+]
