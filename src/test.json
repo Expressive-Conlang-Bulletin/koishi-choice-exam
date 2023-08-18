@@ -1,4 +1,6 @@
-[
+{
+"requirement": 50,
+"problem": [
 	{
 		"type": "single-match",
 		"answer": "B",
@@ -39,5 +41,15 @@
 			}
 		],
 		"answer-range": ["A", "B", "C"]
+	},
+	{
+		"type": "multiple-score-sum",
+		"answer": {
+			"A": 5,
+			"B": 5,
+			"C": -5
+		},
+		"score-range": [-5, 10]
 	}
 ]
+}

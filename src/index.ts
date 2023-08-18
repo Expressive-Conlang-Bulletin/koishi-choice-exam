@@ -1,13 +1,15 @@
+import {array_union} from './util'
+import {checkAnswer} from './parser'
+import ExamJSON1 from './test.json'
+
 declare module 'koishi' {
-  interface User {
-    exam_ongoing: number,
-    exam_passed: number[]
-  }
+	interface User {
+		exam_ongoing: number,
+		exam_passed: string[]
+	}
 }
 
 import { Context, Session, Schema } from 'koishi'
-
-import ExamJSON1 from './test.json';
 
 export const name = 'choice-rating'
 
@@ -15,136 +17,58 @@ export interface Config {}
 
 // export const Config: Schema<Config> = Schema.object({})
 
-function testArg(arg: number) {
-  if (arg < 2) {
-
-  }
-}
-
 export function apply(ctx: Context) {
-  ctx.model.extend('user', {
-    exam_ongoing: "unsigned",
-    exam_passed: "list",
-  })
+	ctx.model.extend('user', {
+		exam_ongoing: "unsigned",
+		exam_passed: "list",
+	})
 
-  ctx.command('exam [arg:number]')
-    .userFields(['exam_ongoing'])
-    .action(({session}, arg) => {
-      if(arg) {
-        session.user.exam_ongoing = arg;
-      } else {
-        return 'exam list'
-      }
-    })
+	ctx.command('exam [arg:number]')
+		.userFields(['exam_ongoing'])
+		.action(({session}, arg) => {
+			if(0 < arg && arg < 2) {
+				session.user.exam_ongoing = arg
+			} else {
+				return 'Exam 1: Group 114514 Entrance Exam'
+			}
+		})
 
-  ctx.command('show')
-    .userFields(['exam_ongoing'])
-    .action(({session}) => JSON.stringify(session.user.exam_ongoing))
+	ctx.command('show')
+		.userFields(['exam_ongoing'])
+		.action(({session}) => JSON.stringify(session.user.exam_ongoing))
 
-  ctx.command('submit <answer:text>')
-    .userFields(['exam_ongoing'])
-    .action(({session}, answer) => checkAnswer(answer, session.user.exam_ongoing))
+	ctx.command('submit <answer:text>')
+		.userFields(['exam_ongoing', 'exam_passed'])
+		.action(({session}, answer) => process_exam(
+			answer,
+			session.user
+		))
 }
 
-function checkAnswer(answer: string, exam_id: number): string {
-  let exam_object;
-  switch (exam_id) {
-    case 1:
-    default: {
-      exam_object = ExamJSON1
-      break;
-    }
-  }
-  let i = 0;
-  let score = 0;
-  let len = answer.length;
-  for (let problem of exam_object) {
-    switch (problem.type) {
-      case "single-match": {
-        if (i >= len) { break; }
-        let ans: string;
-        do {
-          ans = answer[i++]
-        } while (ans == " " || ans == "\n");
-        console.log(ans);
-        if (problem['answer-range'].every((choice) => choice != ans)) {
-          return `Invalid Option at position ${i}.`
-        } else if (problem.answer == ans) {
-          score += problem.score
-        }
-        break;
-      }
-
-      case "single-match-any": {
-        if (i >= len) { break; }
-        let ans: string;
-        do {
-          ans = answer[i++]
-        } while (ans == " " || ans == "\n");
-        console.log(ans);
-        let potential_score = problem.answer[ans];
-        if (potential_score != undefined) {
-          score += potential_score
-        } else {
-          return `Invalid Option at position ${i}.`
-        }
-        break;
-      }
-
-      case "multiple-match": {
-        if (i >= len) { break; }
-        let ans: string;
-        do {
-          ans = answer[i++]
-        } while (ans == " " || ans == "\n");
-        let ans_list = [];
-        do {
-          if (problem['answer-range'].every((choice) => choice != ans)) {
-            return `Invalid Option at position ${i}.`
-          } else {
-            ans_list.push(ans);
-          }
-          ans = answer[i]
-        } while (ans != " " && ans != "\n" && i++ < len);
-        console.log(ans_list);
-        if (array_same(ans_list, problem.answer)) {// maybe should remove duplicates, however im lazy here
-          score += problem.score
-        }
-        break;
-      }
-
-      case "multiple-match-any": {
-        if (i >= len) { break; }
-        let ans: string;
-        do {
-          ans = answer[i++]
-        } while (ans == " " || ans == "\n");
-        let ans_list = [];
-        do {
-          if (problem['answer-range'].every((choice) => choice != ans)) {
-            return `Invalid Option at position ${i}.`
-          } else {
-            ans_list.push(ans);
-          }
-          ans = answer[i]
-        } while (ans != " " && ans != "\n" && i++ < len);
-        console.log(ans_list);
-        for (let some of problem.answer) {
-          let p_answer = some.input;
-          if (array_same(ans_list, p_answer)) {// maybe should remove duplicates, however im lazy here
-            score += some.score
-            break
-          };
-        }
-        break;
-      }
-
-
-    }
-  };
-  return JSON.stringify(score)
-}
-
-function array_same(array1: Array<any>, array2: Array<any>) {
-  return array1.length === array2.length && array1.every((value, index) => value === array2[index])
+function process_exam(answer: string, user): string {
+	let exam_id = user.exam_ongoing
+	let exam_object, problem_object
+	switch (exam_id) {
+		case 1: {
+			exam_object = ExamJSON1
+			break
+		}
+		default: {
+			return 'Exam ID does not exist.'
+		}
+	}
+	problem_object = exam_object.problem;
+	try {
+		let score = checkAnswer(answer, problem_object)
+		// console.log(answer+score)
+		if (score >= exam_object.requirement) {
+			user.exam_passed.push(exam_id.toString())
+			user.exam_passed = array_union(user.exam_passed)
+			return JSON.stringify(user.exam_passed)+JSON.stringify(score)
+		} else {
+			return JSON.stringify(user.exam_passed)+JSON.stringify(score)
+		}
+	} catch(e) {
+		return e
+	}
 }
