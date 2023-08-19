@@ -1,3 +1,4 @@
+[
 {
 	"requirement": 50,
 	"answers": [
@@ -52,5 +53,6 @@
 			"score-range": [-5, 10]
 		}
 	],
-	"problem": "Problem 1: Choose the option that blabla ..."
+	"question": "Problem 1: Choose the option that blabla ..."
 }
+]

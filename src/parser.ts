@@ -5,7 +5,8 @@ export function checkAnswer(answer: string, exam_object): number {
 	let score = 0
 	let len = answer.length
 	for (let problem of exam_object) {
-		// console.log(problem.type)
+		console.log(problem.type)
+		// 讲起来有些麻烦，参考 `exampleData/` 和源码一起看吧。
 		switch (problem.type) {
 			case undefined: {
 				throw new Error(`Problem is invalid. Please contact the administrator.`)
