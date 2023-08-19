@@ -1,6 +1,6 @@
 import {array_union} from './util'
 import {checkAnswer} from './parser'
-import ExamJSON1 from './test.json'
+import ExamJSON1 from './privateData/test.json'
 
 declare module 'koishi' {
 	interface User {
@@ -9,7 +9,7 @@ declare module 'koishi' {
 	}
 }
 
-import { Context, Session, Schema } from 'koishi'
+import { Context, Bot, Session, Schema } from 'koishi'
 
 export const name = 'choice-rating'
 
@@ -21,6 +21,24 @@ export function apply(ctx: Context) {
 	ctx.model.extend('user', {
 		exam_ongoing: "unsigned",
 		exam_passed: "list",
+	})
+
+	ctx.on('guild-member-request', async (session) => {
+		console.log('database')
+		if (session.guildId == '') {
+			let uid = session.userId
+			let aid = await ctx.database.get('binding', {pid: uid}, ['aid'])
+			let res = await ctx.database.get('user', {id: aid[0].aid}, ['exam_passed'])
+			let passed = res[0].exam_passed
+			// console.log(session)
+			// console.log(res)
+			// console.log(res[0].exam_passed)
+			if (passed.some((elem) => elem === '1')) {
+				session.bot.handleGuildMemberRequest(session.messageId, true) 
+			} else {
+				session.bot.handleGuildMemberRequest(session.messageId, false, 'Pass Exam First.') 
+			}
+		}
 	})
 
 	ctx.command('exam [arg:number]')
